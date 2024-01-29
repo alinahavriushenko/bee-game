@@ -1,0 +1,62 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#board {
+  position: relative;
+  background-color: pink;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#timer {
+  background-color: green;
+  position: absolute;
+}
+
+#player {
+  background-color: blueviolet;
+  position: absolute;
+}
+
+.point {
+  background-color: brown;
+  position: absolute;
+}
+
+.enemy {
+  background-color: grey;
+  position: absolute;
+}
+
+#display-bar,
+#display-bar-timer {
+  display: flex;
+  width: 100%;
+  background-color: #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 5px;
+  position: absolute;
+}
+
+#progress-bar,
+#time-left {
+  height: 20px;
+  background-color: rgb(255, 146, 164);
+  width: 0%;
+  border-radius: 8px;
+}
+
+#total-points,
+#timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: blueviolet;
+  color: #fff;
+}
