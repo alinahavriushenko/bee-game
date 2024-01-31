@@ -1,6 +1,76 @@
 class Game {
   constructor() {
     this.board = this.createBoard();
+    this.showMessageScreen("startGame");
+
+    this.currentLevel = 0;
+    this.gameLevels = [
+      { id: 1, duration: 30, points: 15 },
+      { id: 2, duration: 50, points: 25 },
+      { id: 3, duration: 70, points: 40 },
+    ];
+  }
+
+  showMessageScreen(message) {
+    this.message = message;
+
+    const missionDisplay = document.createElement("div");
+    missionDisplay.setAttribute("class", "game-display");
+    this.board.appendChild(missionDisplay);
+
+    let levelTitle = "";
+    let levelMessage = "";
+
+    if (this.message === "startGame") {
+      levelTitle = "Welcome";
+      levelMessage = "Press start to play";
+    } else if (this.message === "levelUp") {
+      this.endGameRound();
+      this.currentLevel++;
+      levelTitle = `Welcome to the next level ${this.currentLevel}`;
+      levelMessage = "Press start to play";
+    } else if (this.message === "youWon") {
+      this.endGameRound();
+      levelTitle = `You won!`;
+      levelMessage = "Press start to play";
+    } else if (this.message === "levelDown") {
+      this.endGameRound();
+      this.currentLevel--;
+      levelTitle = `Go back to level ${this.currentLevel}`;
+      levelMessage = "Press start to play";
+    } else if (this.message === "tryAgain") {
+      this.endGameRound();
+      levelTitle = `Try again`;
+      levelMessage = "Press start to play";
+    }
+
+    missionDisplay.innerHTML = `
+    <img />
+    <h1 id="start-game">${levelTitle}</h1>
+    <h2>${levelMessage}</h2>
+    `;
+
+    const startGame = document.getElementById("start-game");
+    startGame.addEventListener("click", () => {
+      this.board.removeChild(missionDisplay);
+      this.startGameRound();
+    });
+
+    missionDisplay.style.width = 70 + "vw";
+    missionDisplay.style.height = 70 + "vh";
+    missionDisplay.style.left = 20 + "vw";
+    missionDisplay.style.top = 20 + "vh";
+  }
+
+  createBoard() {
+    const board = document.createElement("div");
+    board.setAttribute("id", "board");
+    document.body.appendChild(board);
+    console.log("board created");
+    return board; // return board
+  }
+
+  startGameRound() {
     this.player = new Player();
     this.listenEvents();
     this.detectCollision();
@@ -11,29 +81,23 @@ class Game {
     this.point = null;
     this.pointEl = null;
     this.enemyEl = null;
+
     this.progress = 0;
 
+    this.barsContainer = null;
     this.progressBar = null;
     this.pointDisplay = null;
     this.createPointsBar();
     this.enemy = null;
     this.pointsCount = 0;
-    this.generatePoints();
+    this.handlePoints();
 
     this.createTimer();
     this.countDown();
 
-    this.pointsToCollect = 100;
-    this.gameDuration = 60;
+    this.pointsToCollect = this.gameLevels[this.currentLevel].points;
+    this.gameDuration = this.gameLevels[this.currentLevel].duration;
     this.timeRemaining = this.gameDuration;
-  }
-
-  createBoard() {
-    const board = document.createElement("div");
-    board.setAttribute("id", "board");
-    document.body.appendChild(board);
-    console.log("board created");
-    return board; // return board
   }
 
   listenEvents() {
@@ -64,21 +128,26 @@ class Game {
     });
   }
 
-  generatePoints() {
-    setInterval(() => {
+  handlePoints() {
+    this.enemiesCreationId = null;
+    this.pointCreationId = null;
+    this.pointsRemovalId = null;
+
+    // TODO rename method
+    this.pointCreationId = setInterval(() => {
       this.point = new Points();
       this.points.push(this.point);
-    }, 3000);
+    }, 3000); // 3000
 
-    setInterval(() => {
+    this.enemiesCreationId = setInterval(() => {
       this.enemy = new Enemy();
       this.enemies.push(this.enemy);
     }, 5000);
 
-    setInterval(() => {
+    this.pointsRemovalId = setInterval(() => {
       const removedPoint = this.points.shift();
       if (removedPoint.pointEl) {
-        this.board.removeChild(removedPoint.pointEl);
+        removedPoint.pointEl.remove();
       }
     }, 7000);
   }
@@ -98,8 +167,8 @@ class Game {
           console.log(this.pointsCount);
 
           if (pointElement.pointEl) {
-            this.points.splice(index, 1); // delete from the array
-            this.board.removeChild(pointElement.pointEl);
+            this.points.splice(index, 1);
+            pointElement.pointEl.remove();
           }
         }
       });
@@ -126,19 +195,21 @@ class Game {
   }
 
   createPointsBar() {
+    this.barsContainer = document.createElement("div");
+    this.barsContainer.setAttribute("class", "bars-container");
+    this.board.appendChild(this.barsContainer);
+
     this.pointDisplay = document.createElement("div");
     this.pointDisplay.setAttribute("id", "display-bar");
-    this.board.appendChild(this.pointDisplay);
+    this.barsContainer.appendChild(this.pointDisplay);
 
     this.pointDisplay.innerHTML = `
     <div id="progress-bar"></div>
     <div id="total-points"></div>
     `;
 
-    this.pointDisplay.style.width = 20 + "vw";
+    this.pointDisplay.style.width = 30 + "vw";
     this.pointDisplay.style.height = 5 + "vh";
-    this.pointDisplay.style.left = 50 + "vw";
-    this.pointDisplay.style.top = 50 + "vh";
   }
 
   updatePointsCollected(points) {
@@ -146,40 +217,92 @@ class Game {
     document.getElementById("progress-bar").style.width = this.progress + "%";
     document.getElementById("total-points").innerHTML = points;
 
-    if (points === this.pointsToCollect) {
-      location.href = "youwon.html";
+    const currentLevelData = this.gameLevels[this.currentLevel];
+
+    if (points >= currentLevelData.points) {
+      if (this.currentLevel < this.gameLevels.length - 1) {
+        this.showMessageScreen("levelUp");
+
+        console.log("level up");
+      } else if (this.currentLevel >= this.gameLevels.length - 1) {
+        this.showMessageScreen("youWon");
+      } else {
+        console.log("UP");
+      }
     }
   }
 
   createTimer() {
+    this.timerId = null;
     this.timer = document.createElement("div");
     this.timer.setAttribute("id", "display-bar-timer");
-    this.board.appendChild(this.timer);
+    this.barsContainer.appendChild(this.timer);
 
     this.timer.innerHTML = `
     <div id="time-left"></div>
     <div id="timer"></div>
     `;
 
-    this.timer.style.width = 20 + "vw";
+    this.timer.style.width = 30 + "vw";
     this.timer.style.height = 5 + "vh";
-    this.timer.style.left = 30 + "vw";
-    this.timer.style.top = 30 + "vh";
   }
 
   countDown() {
-    setInterval(() => {
+    this.timerId = setInterval(() => {
       if (this.timeRemaining !== 0) {
         this.timeRemaining--;
         let timeLeft = (this.timeRemaining / this.gameDuration) * 100;
         document.getElementById("time-left").style.width = timeLeft + "%";
         document.getElementById("timer").innerHTML = this.timeRemaining;
       } else {
-        location.href = "gameover.html";
+        if (this.currentLevel < 1) {
+          clearInterval(this.timerId);
+          this.showMessageScreen("tryAgain");
+        } else {
+          clearInterval(this.timerId);
+          this.showMessageScreen("levelDown");
+        }
       }
     }, 1000);
+  }
+
+  endGameRound() {
+    clearInterval(this.enemiesCreationId);
+    clearInterval(this.pointCreationId);
+    clearInterval(this.pointsRemovalId);
+    clearInterval(this.timerId);
+
+    this.enemies.forEach((enemy) => {
+      if (enemy.enemyEl) {
+        enemy.enemyEl.remove();
+      }
+    });
+
+    this.points.forEach((point) => {
+      if (point.pointEl) {
+        point.pointEl.remove();
+      }
+    });
+
+    this.keysPressed = {};
+    this.points = [];
+    this.enemies = [];
+    this.point = null;
+    this.pointEl = null;
+    this.enemyEl = null;
+    this.progress = 0;
+
+    if (this.barsContainer) {
+      this.barsContainer.remove();
+    }
+
+    const playerElement = document.getElementById("player");
+    if (playerElement) {
+      playerElement.remove();
+    }
   }
 }
 
 //
 const beeGame = new Game();
+console.log(beeGame.gameLevels[0].points);
