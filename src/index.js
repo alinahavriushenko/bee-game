@@ -5,7 +5,7 @@ class Game {
 
     this.currentLevel = 0;
     this.gameLevels = [
-      { id: 1, duration: 30, points: 15 },
+      { id: 1, duration: 25, points: 15 },
       { id: 2, duration: 50, points: 25 },
       { id: 3, duration: 70, points: 40 },
     ];
@@ -13,53 +13,85 @@ class Game {
 
   showMessageScreen(message) {
     this.message = message;
+    let backgroundSound = new Audio("./audio/background.flac");
 
     const missionDisplay = document.createElement("div");
     missionDisplay.setAttribute("class", "game-display");
     this.board.appendChild(missionDisplay);
 
-    let levelTitle = "";
-    let levelMessage = "";
+    const levelData = {
+      startGame: {
+        title: "Uh-oh!",
+        intro:
+          "Our once-vibrant garden is in trouble – the flowers are withering. The delicate balance of nature is disrupted, and it's up to you to embark on a pollen-collecting journey. Take on the role of a bee, a crucial link in the circle of life. By collecting pollen, you'll bring life back to our flowers. But watch out for clouds – they can dampen your progress!",
+        img: "start",
+        button: "Play now",
+      },
+      levelUp: {
+        title: `Level ${this.currentLevel + 1}`,
+        intro:
+          "Great job, busy bee! The garden is showing signs of revival, but there's more to be done. Your efforts have brought life back to fading flowers, but not all of them. Keep collecting pollen and navigating through challenges – there are still flowers waiting to bloom under your care.",
+        img: "lvl2",
+        button: "Go to the next level",
+      },
+      youWon: {
+        title: "You won!",
+        intro:
+          "You did it, busy bee! The garden is in full bloom, vibrant with life and color. Your unwavering dedication have triumphed over challenges, turning once-fading flowers into a magnificent tapestry of nature's beauty. Congratulations on a job well done!",
+        img: "final",
+        button: "Play again",
+      },
+      levelDown: {
+        title: `Back on level ${this.currentLevel + 1}`,
+        intro:
+          "The journey through the garden is filled with twists and turns. If a level proved challenging, it's okay. You've got this – go back, collect more pollen, and let the garden thrive under your care!",
+        img: "start",
+        button: "Try again",
+      },
+      tryAgain: {
+        title: "Try again",
+        intro:
+          "Uh-oh! The garden needs more love.  It seems the challenges were tough, and some flowers couldn't withstand the hurdles. Don't worry, though! Nature is forgiving. Ready to give it another shot?",
+        img: "start",
+        button: "Try again",
+      },
+    };
 
-    if (this.message === "startGame") {
-      levelTitle = "Welcome";
-      levelMessage = "Press start to play";
-    } else if (this.message === "levelUp") {
+    const currentLevelData = levelData[this.message];
+
+    if (this.message === "levelUp") {
       this.endGameRound();
       this.currentLevel++;
-      levelTitle = `Welcome to the next level ${this.currentLevel}`;
-      levelMessage = "Press start to play";
     } else if (this.message === "youWon") {
       this.endGameRound();
-      levelTitle = `You won!`;
-      levelMessage = "Press start to play";
     } else if (this.message === "levelDown") {
       this.endGameRound();
       this.currentLevel--;
-      levelTitle = `Go back to level ${this.currentLevel}`;
-      levelMessage = "Press start to play";
     } else if (this.message === "tryAgain") {
       this.endGameRound();
-      levelTitle = `Try again`;
-      levelMessage = "Press start to play";
     }
 
     missionDisplay.innerHTML = `
-    <img />
-    <h1 id="start-game">${levelTitle}</h1>
-    <h2>${levelMessage}</h2>
+    <img src="./img/${currentLevelData.img}-game.png">
+    <h1>${currentLevelData.title}</h1>
+    <p>${currentLevelData.intro}</p>
+    <div id="game-instructions">
+    <img src="./img/arrows.png" alt="game instructions">
+    <p>Guide your bee using the arrow keys and their combinations</p></div>
+    <h2 id="play-btn">${currentLevelData.button}</h2>
     `;
 
-    const startGame = document.getElementById("start-game");
+    const startGame = document.getElementById("play-btn");
     startGame.addEventListener("click", () => {
       this.board.removeChild(missionDisplay);
       this.startGameRound();
+      backgroundSound.play();
     });
 
     missionDisplay.style.width = 70 + "vw";
-    missionDisplay.style.height = 70 + "vh";
-    missionDisplay.style.left = 20 + "vw";
-    missionDisplay.style.top = 20 + "vh";
+    missionDisplay.style.height = 80 + "vh";
+    missionDisplay.style.left = 15 + "vw";
+    missionDisplay.style.top = 10 + "vh";
   }
 
   createBoard() {
@@ -67,12 +99,14 @@ class Game {
     board.setAttribute("id", "board");
     document.body.appendChild(board);
     console.log("board created");
-    return board; // return board
+    return board;
   }
 
   startGameRound() {
     this.player = new Player();
     this.listenEvents();
+    this.handlePoints();
+
     this.detectCollision();
 
     this.keysPressed = {};
@@ -90,7 +124,6 @@ class Game {
     this.createPointsBar();
     this.enemy = null;
     this.pointsCount = 0;
-    this.handlePoints();
 
     this.createTimer();
     this.countDown();
@@ -101,8 +134,12 @@ class Game {
   }
 
   listenEvents() {
+    this.beeSound = new Audio("./audio/bee-sound.wav");
+    this.beeSound.volume = 0.5;
+
     document.addEventListener("keydown", (e) => {
       this.keysPressed[e.code] = true;
+      this.beeSound.play();
 
       if (this.keysPressed["ArrowLeft"] && this.keysPressed["ArrowUp"]) {
         this.player.moveUpLeft();
@@ -125,24 +162,29 @@ class Game {
 
     document.addEventListener("keyup", (e) => {
       this.keysPressed[e.code] = false;
+      this.beeSound.pause();
     });
   }
 
   handlePoints() {
-    this.enemiesCreationId = null;
-    this.pointCreationId = null;
-    this.pointsRemovalId = null;
+    clearInterval(this.pointCreationId);
+    clearInterval(this.enemiesCreationId);
+    clearInterval(this.pointsRemovalId);
 
-    // TODO rename method
+    this.cloudSound = new Audio("./audio/cloud-sound.mp3");
+    this.cloudSound.volume = 0.5;
+    this.cloudSound.playbackRate = 0.6;
+
     this.pointCreationId = setInterval(() => {
       this.point = new Points();
       this.points.push(this.point);
-    }, 3000); // 3000
+    }, 2000);
 
     this.enemiesCreationId = setInterval(() => {
       this.enemy = new Enemy();
+      this.cloudSound.play();
       this.enemies.push(this.enemy);
-    }, 5000);
+    }, 7000);
 
     this.pointsRemovalId = setInterval(() => {
       const removedPoint = this.points.shift();
@@ -200,12 +242,12 @@ class Game {
     this.board.appendChild(this.barsContainer);
 
     this.pointDisplay = document.createElement("div");
-    this.pointDisplay.setAttribute("id", "display-bar");
+    this.pointDisplay.setAttribute("class", "display-bar");
     this.barsContainer.appendChild(this.pointDisplay);
 
     this.pointDisplay.innerHTML = `
-    <div id="progress-bar"></div>
-    <div id="total-points"></div>
+    <div class="progress-bar" id="progress-points"></div>
+    <div class="num-display" id="total-points"></div>
     `;
 
     this.pointDisplay.style.width = 30 + "vw";
@@ -214,7 +256,7 @@ class Game {
 
   updatePointsCollected(points) {
     this.progress = (points / this.pointsToCollect) * 100;
-    document.getElementById("progress-bar").style.width = this.progress + "%";
+    document.getElementById("progress-points").style.width = this.progress + "%";
     document.getElementById("total-points").innerHTML = points;
 
     const currentLevelData = this.gameLevels[this.currentLevel];
@@ -222,7 +264,6 @@ class Game {
     if (points >= currentLevelData.points) {
       if (this.currentLevel < this.gameLevels.length - 1) {
         this.showMessageScreen("levelUp");
-
         console.log("level up");
       } else if (this.currentLevel >= this.gameLevels.length - 1) {
         this.showMessageScreen("youWon");
@@ -235,12 +276,12 @@ class Game {
   createTimer() {
     this.timerId = null;
     this.timer = document.createElement("div");
-    this.timer.setAttribute("id", "display-bar-timer");
+    this.timer.setAttribute("class", "display-bar");
     this.barsContainer.appendChild(this.timer);
 
     this.timer.innerHTML = `
-    <div id="time-left"></div>
-    <div id="timer"></div>
+    <div class="progress-bar" id="time-left"></div>
+    <div class="num-display" id="timer"></div>
     `;
 
     this.timer.style.width = 30 + "vw";
@@ -267,6 +308,10 @@ class Game {
   }
 
   endGameRound() {
+    console.log("Clearing intervals...");
+    clearInterval(this.enemiesCreationId);
+    console.log("Intervals cleared.");
+
     clearInterval(this.enemiesCreationId);
     clearInterval(this.pointCreationId);
     clearInterval(this.pointsRemovalId);

@@ -8,9 +8,10 @@ body {
   background-color: pink;
   height: 100vh;
   overflow: hidden;
-  background-image: url("./img/background-img.png");
+  background-image: url("../img/background-img.png");
   background-size: cover;
   background-repeat: no-repeat;
+  color: rgb(32, 32, 32);
 }
 
 .game-display {
@@ -29,31 +30,61 @@ body {
 }
 
 .game-display img {
-  width: 400px;
+  width: 420px;
   position: relative;
-  bottom: 25px;
+  bottom: 28px;
 }
 
 .game-display h1 {
   margin: 0;
   position: relative;
-  bottom: 50px;
+  bottom: 65px;
 }
 
 .game-display p {
   padding: 0;
   margin: 0;
-  font-size: 20px;
+  font-size: 22px;
   padding: 0 55px;
   position: relative;
-  bottom: 33px;
+  bottom: 50px;
   text-align: center;
 }
 
+#game-instructions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row-reverse;
+  font-weight: bold;
+  position: relative;
+  top: 16px;
+}
+
+#game-instructions img {
+  width: 100px;
+  bottom: 60px;
+  right: 38px;
+}
+
 #play-btn {
-  width: 50px;
-  height: 40px;
   cursor: pointer;
+  color: rgb(32, 32, 32);
+  padding: 15px 30px;
+  font-size: 18px;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s;
+  background: linear-gradient(145deg, orange, #ffff77);
+  box-shadow: 20px 20px 60px #cec55b, -20px -20px 60px #ffff83;
+  text-transform: uppercase;
+  font-weight: bold;
+  position: relative;
+  bottom: 27px;
+}
+
+#play-btn:hover {
+  border: 2px solid orange;
 }
 
 #player {
@@ -127,8 +158,8 @@ body {
   border-bottom-left-radius: 5px;
   border-top-left-radius: 5px;
 
-  background: #ff94c8;
-  box-shadow: inset 4px 4px 8px #ff409c, inset -4px -4px 8px #ffdeff;
+  background: #ffb20d;
+  box-shadow: inset 4px 4px 8px #ffea2d, inset -4px -4px 8px #ffdeff;
 }
 
 .num-display {
@@ -140,7 +171,7 @@ body {
   border-radius: 50%;
   font-weight: bold;
 
-  color: palevioletred;
+  color: #ffb20d;
   background: rgba(255, 255, 255, 0.56);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(8.5px);
