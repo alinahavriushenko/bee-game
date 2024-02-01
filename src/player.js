@@ -15,7 +15,7 @@ class Player {
     this.board.appendChild(this.playerElement);
 
     this.playerImage = document.createElement("img");
-    this.playerImage.setAttribute("src", "../img/bee.png");
+    this.playerImage.setAttribute("src", "./img/bee.gif");
     this.playerElement.appendChild(this.playerImage);
     this.playerImage.style.transition = "transform 0.5s ease-in-out";
 
