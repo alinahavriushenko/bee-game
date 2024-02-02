@@ -172,7 +172,7 @@ class Game {
     clearInterval(this.pointsRemovalId);
 
     this.cloudSound = new Audio("./audio/cloud-sound.mp3");
-    this.cloudSound.volume = 0.5;
+    this.cloudSound.volume = 0.3;
     this.cloudSound.playbackRate = 0.6;
 
     this.pointCreationId = setInterval(() => {
@@ -195,6 +195,7 @@ class Game {
   }
 
   detectCollision() {
+    let pointSound = new Audio("./audio/point-sound.flac");
     setInterval(() => {
       this.points.forEach((pointElement, index) => {
         if (
@@ -204,6 +205,9 @@ class Game {
           this.player.positionY + this.player.height > pointElement.positionY
         ) {
           console.log("collision detected");
+          pointSound.play();
+          pointSound.volume = 0.5;
+
           this.pointsCount += 5;
           this.updatePointsCollected(this.pointsCount);
           console.log(this.pointsCount);
